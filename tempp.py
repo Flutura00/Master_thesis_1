@@ -10,11 +10,6 @@ from tqdm import tqdm
 import random
 import math
 
-import numpy as np
-from scipy.stats import ranksums
-
-plt.rcParams["figure.figsize"] = (20, 10)
-
 pd.options.mode.chained_assignment = None  # default='warn'
 # here for sure
 class StreakLength:
@@ -22,13 +17,16 @@ class StreakLength:
             self,
             path_to_input1=r"C:\Users\ag-bahl\Desktop\plaids\data_preprocessed_concat.hdf5",
             angle_value = 2, #meeeeeeeeeeeeeeh you need complete redefinition of left right straight...
-
+            ls_dfs = [[0]] ,
+            ls_dfs_str = ['plaids 75_45 and motion up45'],
             ):
 
         # Set user input
         self.path_to_input1 = Path(path_to_input1)
         self.angle_value = angle_value
         self.bout_angle_threshold = angle_value
+        self.ls_dfs = ls_dfs
+        self.ls_dfs_str = ls_dfs_str
 
     def run(self, **kwargs):
         """Main function to perform sanity check."""
@@ -170,20 +168,19 @@ class StreakLength:
 
                 else:
                     nr_mesups+=1
-      #  print('nr_mesups ' + str(nr_mesups))
-      #  print('df length'+ str(len(df)))
+        print('nr_mesups ' + str(nr_mesups))
+        print('df length'+ str(len(df)))
        # list_of_streaks.append(a_streak)
         list_of_streaks_left = [x for x in list_of_streaks_left if x <= 20]
         list_of_streaks_right = [x for x in list_of_streaks_right if x <= 20]
         list_of_streaks_straight = [x for x in list_of_streaks_straight if x <= 20]
-        ls_together = list_of_streaks_left+list_of_streaks_right
-
         return list_of_streaks_left,list_of_streaks_right,list_of_streaks_straight
        # list_of_streaks = [x for x in list_of_streaks if x <= 20]
     def plotter_left_right(self,ls_str,title):
+        lb = ['left streaks', 'right straks', 'straight streaks', 'random','all streaks']
 
         for elm in range(len(ls_str)):
-            count_l, bins_count_l = np.histogram(ls_str[elm], bins=np.arange(0, 15, 0.5, dtype=int))
+            count_l, bins_count_l = np.histogram(ls_str[elm], bins=np.arange(0, 15, 1, dtype=int))
             pdf_l = count_l / sum(count_l)
             cdf_l = np.cumsum(pdf_l)
 
@@ -203,13 +200,11 @@ class StreakLength:
 
             plt.plot(bins_count_l[1:], cdf_l, label=lb[elm], linewidth=1)
         #    plt.scatter(bins_count_l[1:], cdf_l, label=lb[elm], s=5)
-            plt.title(title,size = 10)
-
+            plt.title(title,size = 20)
         plt.legend()
+        plt.scatter([1,1],[0.68,1],s = 0.1,color = 'dimgray')
         plt.savefig("C:/Users/ag-bahl/Desktop/labmeeting_prep/motion_forward/" + str(title) + ".png" )
         plt.show()
-        print(title + " variables compared are :" +lb[0] + " and " + lb[3]  )
-        print(ranksums(ls_str[0], ls_str[3]))
 
     def looper_function_edited(self): # the plotter angle now receives from looper function! 4 different lists, for each variable!
         # the subset list_dfsa contains dataframes for each stimulus! thats good. we subset from it again!
@@ -217,22 +212,21 @@ class StreakLength:
         ls_lefts = []
         ls_rights = []
         ls_straights = []
-        ls_dfs =[self.list_dfs[4],self.list_dfs[6],self.list_dfs[11],self.list_dfs[12],self.list_dfs[5]] # forward_0 = 4,6,11,12,5 | leftup_45 = 0,7,9,13,5 | left_90 = 2, 8, 10, 14,5
-        ls_dfs_str = 'motion_forward and plaids with angle 0 (forward plaids), '
+        ls_dfs =[self.list_dfs[0],self.list_dfs[7],self.list_dfs[9],self.list_dfs[13]]
+        ls_dfs_str = '45 degree up and plaids with 45 degree orientation'
         new_subset = pd.concat(ls_dfs) # one df with 4 stimuli!
         stimuli_new_s = new_subset['stimulus_name'].unique().tolist() # this will also become the list of titles!
         print(stimuli_new_s)
-        for subset in range(len(ls_dfs)): # here we loop through the stimuli, and plot separately for each orientation left right straight!
-            ss_df = new_subset[new_subset['stimulus_name']==stimuli_new_s[subset]]
-            list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight = self.streak_length_orientation(ss_df,self.angle_value)
+        for subset in range(len(stimuli_new_s)): # here we loop through the stimuli, and plot separately for each orientation left right straight!
+            print(stimuli_new_s[subset])
+            list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight = self.streak_length_orientation(self.list_dfs[subset],self.angle_value)
             ls_lefts.append(list_of_streaks_left)
             ls_rights.append(list_of_streaks_right)
             ls_straights.append(list_of_streaks_straight)
-        ls_ori = ['LEFT', 'RIGHT', 'STRAIGHT']
+        ls_ori = ['left', 'right', 'straight']
         lsls = [ls_lefts,ls_rights,ls_straights]
-
         for i in range(3):
-            self.plotter_angles(lsls[i],title = ls_dfs_str + ' ' + ls_ori[i]+ ' STREAKS distribution, angle used '+ str(self.angle_value) +' degrees, ',lb = stimuli_new_s)
+            self.plotter_angles(lsls[i],title = ls_dfs_str + ' ' + ls_ori[i],lb = stimuli_new_s)
 
     def looper_function(
             self):  # the plotter angle now receives from looper function! 4 different lists, for each variable!
@@ -252,7 +246,8 @@ class StreakLength:
                 self.list_dfs[subset], self.angle_value)
             ls_str = [list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight, list_of_streaks_rand,
                       list_of_streaks_subset]
-            self.plotter_angles(ls_str,title=str(self.list_dfs_str[subset]) + ' angle value ' + str(self.angle_value))
+            self.plotter_left_right(ls_str,
+                                    title=str(self.list_dfs_str[subset]) + ' angle value ' + str(self.angle_value))
 
 
 # def strak length to left to the right and straight(+-2 degrees)! and also absolute valyue
