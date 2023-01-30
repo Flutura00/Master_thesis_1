@@ -11,15 +11,17 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 import seaborn as sns
 
+# orientation change per stimulus
+
 class TimePreferenceIndex:
     def __init__(
             self,
-            path_to_input1=r"C:\Users\ag-bahl\Desktop\sine_gratings_8_directions\data_preprocessed.hdf5",
+            path_to_input1=r"C:\Users\ag-bahl\Desktop\sine_45_75_wavelength_0.15\data_preprocessed.hdf5",
             bin_size = 1,
             subset = False,
             pref = 'preference_aboslute',
             plot_together = True,
-            plot_sem = False,
+            plot_sem = True,
             ):
 
         # Set user input
@@ -39,6 +41,7 @@ class TimePreferenceIndex:
         self.bin_data()
         self.mean_sem_df()
         self.plot_pref(separate = False)
+     #   self.each_fish(separate = False)
        # self.plot_pref(separate = True)
 
       #  return self.return_df()
@@ -71,6 +74,7 @@ class TimePreferenceIndex:
 
         self.time_marker = None
         num_fish = len(self.bin_df.index.unique('fish_ID'))
+        print(' number of fish ' +str(num_fish) )
         self.t_stamp = self.bin_df.index.unique('binned_time')
         self.bin_df = self.bin_df.reset_index()
 
@@ -80,7 +84,7 @@ class TimePreferenceIndex:
     def plot_pref(self,separate):
         plt.rcParams["figure.figsize"] = (15, 12)
 
-        colors = ['dimgray','red','magenta','orange','green','blue','yellow','black','maroon']# sns.color_palette("hls", 9)
+    #    colors = ['dimgray','red','magenta','orange','green','blue','yellow','black','maroon']# sns.color_palette("hls", 9)
         i = 0
         if self.plot_together == True:
             legend = []
@@ -90,11 +94,11 @@ class TimePreferenceIndex:
             plot_mean_df = self.mean_df.xs(stim, level='stimulus_name')
             plot_sem_df = self.sem_df.xs(stim, level='stimulus_name')
 
-            plt.plot(plot_mean_df[self.pref], marker='o', linewidth=3, markersize=2,label = stim,color = colors[i])
+            plt.plot(plot_mean_df[self.pref], marker='o', linewidth=3, markersize=2,label = stim)#, color = colors[i])
             if self.plot_sem:
                 plt.fill_between(self.t_stamp, plot_mean_df[self.pref] + plot_sem_df[self.pref],
                                  plot_mean_df[self.pref] - plot_sem_df[self.pref],
-                                 alpha=0.25,color = colors[i])
+                                 alpha=0.25)# ,color = colors[i])
             i+=1
             if separate:
                 if self.time_marker != None:
@@ -113,14 +117,90 @@ class TimePreferenceIndex:
                     plt.axvline(x=t, color='grey', linestyle='--', alpha=0.4, label='_nolegend_')
             plt.legend(legend, loc = 'upper left')#bbox_to_anchor=(1.04, 0), loc="upper left", borderaxespad=0)
         #    plt.legend(legend,loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.plot([0,50],[0.6,0.6],color = 'black')
-            plt.plot([0,50],[0.5,0.5],color = 'black')
-            plt.plot([40,40],[0,0.6],color = 'black')
+        #    plt.plot([0,50],[0.6,0.6],color = 'black')
+        #    plt.plot([0,50],[0.5,0.5],color = 'black')
+        #    plt.plot([40,40],[0,0.6],color = 'black')
 
-            plt.title('Plaid experiments', size=20)
+            plt.title('Sine gratings forward sine 45 plaid 45', size=20)
             plt.xlabel('Time in seconds', size=20)
             plt.ylabel(str(self.pref), size=20)
             plt.show()
+
+    def each_fish(self,separate):
+        for fish in self.df['fish_ID'].unique().tolist():
+
+            new_df  = self.df[self.df['fish_ID']== fish]
+
+            print(' the fish we want '+ str(fish))
+            if self.subset != False:
+                new_df = pd.concat(self.subset)
+            time_index = new_df['end_time']
+            new_df['binned_time'] = time_index - time_index % self.bin_size + self.bin_size / 2
+#            new_df = new_df.reset_index()
+            bin_df = new_df.groupby(['fish_ID', 'stimulus_name', 'binned_time']).sum()
+            bin_df['total_bouts'] = bin_df.left_bouts + bin_df.right_bouts + bin_df.straight_bouts
+            # Analysed part:
+            bin_df['preference_index'] = (-bin_df.left_bouts + bin_df.right_bouts + bin_df.straight_bouts) / bin_df.total_bouts
+            bin_df['preference_aboslute'] = (-bin_df.left_bouts_absolute + bin_df.right_bouts_absolute) / bin_df.total_bouts
+            bin_df['percentage_left'] = (bin_df.left_bouts / bin_df.total_bouts) * 100
+            bin_df['percentage_right'] = (bin_df.right_bouts / bin_df.total_bouts) * 100
+            bin_df['percentage_straight'] = (bin_df.straight_bouts / bin_df.total_bouts) * 100
+            bin_df['orientation'] = bin_df.bout_orientation / bin_df.total_bouts
+            print('done data binning')
+
+            self.time_marker = None
+            num_fish = len(bin_df.index.unique('fish_ID'))
+            print(' number of fish ' + str(num_fish))
+            self.t_stamp = bin_df.index.unique('binned_time')
+            bin_df = bin_df.reset_index()
+
+            mean_df = bin_df.groupby(['stimulus_name', 'binned_time']).mean()
+            sem_df = bin_df.groupby(['stimulus_name', 'binned_time']).std() / (num_fish) ** 0.5
+            print('done mean sem')
+            plt.rcParams["figure.figsize"] = (15, 12)
+
+            #    colors = ['dimgray','red','magenta','orange','green','blue','yellow','black','maroon']# sns.color_palette("hls", 9)
+            i = 0
+            if self.plot_together == True:
+                legend = []
+            #   for variable in
+            for stim in mean_df.index.unique('stimulus_name'):
+                legend.append(str(stim))
+                plot_mean_df = mean_df.xs(stim, level='stimulus_name')
+                plot_sem_df = sem_df.xs(stim, level='stimulus_name')
+
+                plt.plot(plot_mean_df[self.pref], marker='o', linewidth=3, markersize=2,
+                         label=stim)  # , color = colors[i])
+                if self.plot_sem:
+                    plt.fill_between(self.t_stamp, plot_mean_df[self.pref] + plot_sem_df[self.pref],
+                                     plot_mean_df[self.pref] - plot_sem_df[self.pref],
+                                     alpha=0.25)  # ,color = colors[i])
+                i += 1
+                if separate:
+                    if self.time_marker != None:
+                        for t in self.time_marker:
+                            plt.axvline(x=t, color='grey', linestyle='--', alpha=0.4, label='_nolegend_')
+                    plt.scatter([0, 0], [-1, 1], s=0.1, color='dimgray')
+                    plt.legend(legend)
+                    #       plt.legend(legend,bbox_to_anchor=(1.04, 0), loc="upper left", borderaxespad=0)
+                    plt.title(str(stim), size=20)
+                    plt.xlabel('Time in seconds', size=20)
+                    plt.ylabel(str(self.pref), size=20)
+                    plt.show()
+            if separate == False:
+                if self.time_marker != None:
+                    for t in self.time_marker:
+                        plt.axvline(x=t, color='grey', linestyle='--', alpha=0.4, label='_nolegend_')
+                plt.legend(legend, loc='upper left')  # bbox_to_anchor=(1.04, 0), loc="upper left", borderaxespad=0)
+                #    plt.legend(legend,loc='center left', bbox_to_anchor=(1, 0.5))
+                #    plt.plot([0,50],[0.6,0.6],color = 'black')
+                #    plt.plot([0,50],[0.5,0.5],color = 'black')
+                #    plt.plot([40,40],[0,0.6],color = 'black')
+
+                plt.title('Sine_forward_sine_45_plaid_45, fish: '+str(fish), size=20)
+                plt.xlabel('Time in seconds', size=20)
+                plt.ylabel(str(self.pref), size=20)
+                plt.show()
 
 x = TimePreferenceIndex()
 x.run()

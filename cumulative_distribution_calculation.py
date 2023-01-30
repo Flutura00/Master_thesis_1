@@ -14,11 +14,11 @@ import tables
 from tqdm import tqdm
 import math
 import random
-
+# he radi of each ring from 0 to 9: [0, 0.31622776601683794, 0.447213595499958, 0.5477225575051661, 0.6324555320336759, 0.7071067811865476, 0.7745966692414833, 0.8366600265340756, 0.894427190999916, 0.9486832980505138, 1.0]
 class cdf_pdf_calculation:
     def __init__(
             self,
-            path_to_input =r"C:\Users\ag-bahl\Desktop\plaids\data_preprocessed.hdf5",
+            path_to_input =r"C:\Users\ag-bahl\Desktop\dot_motion_ring_correct_closed_loop\data_preprocessed.hdf5",
             compare_which = [],
             variable = 'ring_membership',
             ):
@@ -48,6 +48,11 @@ class cdf_pdf_calculation:
         self.df.dropna(inplace = True)
         print("number of nans below")
         print(self.df.isna().sum().sum())
+        for stim in self.df['stimulus_name'].unique().tolist():
+            df_st = self.df[self.df['stimulus_name']==stim]
+            plt.hist(df_st['ring_membership'], bins = np.arange(0,10,0.5))
+            plt.title(stim,size = 5)
+            plt.show()
 
     def subset_dfs(self):
         self.list_dfs = []

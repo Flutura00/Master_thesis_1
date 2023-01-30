@@ -23,20 +23,32 @@ import math
                           '60_plaid_-90':'60_plaid_90',
                           '75_plaid_-45':'75_plaid_45',
                           '75_plaid_-90':'75_plaid_90',}
+    for stationary dot hole :
+    flip_dict = {'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1': 'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.2_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.2_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.5_outerr1': 'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.5_outerr1',
+                    }
+    for close looped dot hole:
+    flip_dict = {     'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.1_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.1_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.2_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.2_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.3_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.3_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.4_outerr1':'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.4_outerr1',
+                  'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.5_outerr1': 'dir1_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.5_outerr1',
+                    }
             """
+
 class PreprocessingData:
     def __init__(
             self,
-            path_to_input = r"C:\Users\ag-bahl\Desktop\plaids\data_combined_checked.hdf5",
-            path_to_output =r"C:\Users\ag-bahl\Desktop\plaids\data_preprocessed.hdf5",
+            path_to_input = r"C:\Users\ag-bahl\Desktop\data\sine_75_wv_0_15\data_combined_checked.hdf5",
+            path_to_output =r"C:\Users\ag-bahl\Desktop\data\sine_75_wv_0_15\data_preprocessed.hdf5",
+
+
+
             bout_angle_threshold = 2,
             ori_change_col = 'estimated_orientation_change',
-            flip_dict={'45_plaid_-45': '45_plaid_45',
-                       '45_plaid_-90': '45_plaid_90',
-                       '60_plaid_-45': '60_plaid_45',
-                       '60_plaid_-90': '60_plaid_90',
-                       '75_plaid_-45': '75_plaid_45',
-                       '75_plaid_-90': '75_plaid_90', }
+            flip_dict={"0_plaid_-75":"0_plaid_75" }#,"0_plaid_-75":"0_plaid_75"}
             ):
         # Set user input
         self.path_to_input = Path(path_to_input)
@@ -51,9 +63,9 @@ class PreprocessingData:
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.load_df()
+        self.flip_flops()
         self.fish_ids()
         self.radius()
-        self.flip_flops()
         self.label_bouts()
         self.ring_membership()
         self.store_df()
@@ -62,14 +74,14 @@ class PreprocessingData:
     def load_df(self):
         """Load bout-level dataframe from folder."""
         self.df = pd.read_hdf(self.path_to_input)
-        self.df.sort_values(['fish_name', 'start_time_absolute'], ascending=True,inplace = True)
+        self.df.sort_values(['folder_name', 'start_time_absolute'], ascending=True,inplace = True)
         self.df.reset_index(inplace = True)
 
     def store_df(self):
         """Store bout-level dataframe with excluded trials to folder."""
-        self.df.sort_values(['fish_name', 'start_time_absolute'], ascending=True,inplace = True)
+        self.df.sort_values(['folder_name', 'start_time_absolute'], ascending=True,inplace = True)
         self.df.reset_index(inplace=True,drop=True)
-        self.df.drop(['index'],inplace = True,axis = 1)
+#        self.df.drop(['index'],inplace = True,axis = 1)
         print(f"Storing preprocessed file to {self.path_to_output}...")
         # Store dataframe as hdf5 file
         self.df.to_hdf(str(self.path_to_output), key="all_events", complevel=9)
@@ -77,10 +89,25 @@ class PreprocessingData:
 
 
     def fish_ids(self):
-        self.df['fish_ID'] = self.df.loc[:, 'fish_name'] # fish_name folder_name
-        old_fish_name = self.df['fish_name'].unique().tolist()
+        self.df['fish_ID'] = self.df.loc[:, 'folder_name'] # fish_name folder_name
+        old_stimulus_name = ['dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1',
+                'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.1_outerr1',
+                'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.2_outerr1',
+                'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.3_outerr1',
+                'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.4_outerr1',
+                 'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.5_outerr1',
+                ]
+
+        new_stimulus_name = ['inner0_outer_1',
+                'inner_0.1_outer_1',
+                'inner_0.2_outer_1',
+                'inner_0.3_outer_1',
+                'inner_0.4_outer_1',
+                'inner_0.5_outer_1',]
+        old_fish_name = self.df['folder_name'].unique().tolist()
         new_fish_name = list(range(0, len(old_fish_name)))  # here you need a loc[].blabla! ! !
         self.df['fish_ID'].replace(old_fish_name, new_fish_name, inplace=True)
+        self.df['stimulus_name'].replace(old_stimulus_name, new_stimulus_name, inplace=True)
         print('done with fish_ids')
 #        return self.df
 
@@ -160,6 +187,7 @@ class PreprocessingData:
                     ring_membership[val] = ring
             ring += 1
         self.df['ring_membership'] = ring_membership
+        print(' the radi of each ring from 0 to 9: '+str(radi_ls))
         print('ring done')
         #        return ls_cs
 # to be added - stimnulus gray light versus stimulus actual.

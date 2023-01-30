@@ -9,19 +9,25 @@ from tqdm import tqdm
 #%matplotlib inline
 import random
 import math
+# TODO PLOT HISTOGRAMS AS A LINE INSTEAD OF JUST PDF CDF SO PEOPLE UNDERSTAND IT BETTER BUT YOU ALSO GET A GRIP OF WHAT IT LOOKS LIKE..
+#  and see again how you defined the random data, they could also be data retrieved not from the exact same distribution but from a random distribution with the same variab
 
 import numpy as np
 from scipy.stats import ranksums
 
-plt.rcParams["figure.figsize"] = (20, 10)
+plt.rcParams["figure.figsize"] = (8, 5)
 
 pd.options.mode.chained_assignment = None  # default='warn'
 # here for sure
+
+# TODO : name of the folder becomes title of the graph
+# TODO : ADD a function to combine left right extra!
+# TODO : Merge without flipping
 class StreakLength:
     def __init__(
             self,
-            path_to_input1=r"C:\Users\ag-bahl\Desktop\plaids\data_preprocessed_concat.hdf5",
-            angle_value = 2, #meeeeeeeeeeeeeeh you need complete redefinition of left right straight...
+            path_to_input1=r"C:\Users\ag-bahl\Desktop\data\sine_45_wv_0_15\data_preprocessed.hdf5",
+            angle_value = 5, #meeeeeeeeeeeeeeh you need complete redefinition of left right straight...
 
             ):
 
@@ -99,7 +105,7 @@ class StreakLength:
     # anything that is used again becomes self?        return list_dfs, list_dfs_str
 
     def add_combinations_subsets(self):  # combine subset dataframes into a new dataframe
-        ls_dfs =[self.list_dfs[0],self.list_dfs[7],self.list_dfs[9],self.list_dfs[13]]
+        ls_dfs =[self.list_dfs[0],self.list_dfs[1],self.list_dfs[2]] #,self.list_dfs[3],self.list_dfs[4]]
         ls_dfs_str = '45 degree up and plaids with 45 degree orientation'
         self.list_dfs.append(pd.concat(ls_dfs))
         self.list_dfs_str.append(ls_dfs_str)
@@ -120,7 +126,7 @@ class StreakLength:
                 a_streak = 1
         list_of_streaks.append(a_streak)
 
-        list_of_streaks = [x for x in list_of_streaks if x <= 20]
+    #    list_of_streaks = [x for x in list_of_streaks if x <= 20]
         plt.rcParams["figure.figsize"] = (20, 10)
        # plt.hist(list_of_streaks, bins=20)
         #plt.title('streak length, all directions',size = 20)
@@ -206,10 +212,10 @@ class StreakLength:
             plt.title(title,size = 10)
 
         plt.legend()
-        plt.savefig("C:/Users/ag-bahl/Desktop/labmeeting_prep/motion_forward/" + str(title) + ".png" )
+        #plt.savefig("C:/Users/ag-bahl/Desktop/labmeeting_prep/motion_forward/" + str(title) + ".png" )
         plt.show()
-        print(title + " variables compared are :" +lb[0] + " and " + lb[3]  )
-        print(ranksums(ls_str[0], ls_str[3]))
+        print(title + " variables compared are :" +lb[0] + " and " + lb[2]  )
+        print(ranksums(ls_str[0], ls_str[2]))
 
     def looper_function_edited(self): # the plotter angle now receives from looper function! 4 different lists, for each variable!
         # the subset list_dfsa contains dataframes for each stimulus! thats good. we subset from it again!
@@ -217,8 +223,8 @@ class StreakLength:
         ls_lefts = []
         ls_rights = []
         ls_straights = []
-        ls_dfs =[self.list_dfs[4],self.list_dfs[6],self.list_dfs[11],self.list_dfs[12],self.list_dfs[5]] # forward_0 = 4,6,11,12,5 | leftup_45 = 0,7,9,13,5 | left_90 = 2, 8, 10, 14,5
-        ls_dfs_str = 'motion_forward and plaids with angle 0 (forward plaids), '
+        ls_dfs =[self.list_dfs[0],self.list_dfs[1],self.list_dfs[2]]#,self.list_dfs[3]]#,self.list_dfs[4]] # forward_0 = 4,6,11,12,5 | leftup_45 = 0,7,9,13,5 | left_90 = 2, 8, 10, 14,5
+        ls_dfs_str = 'motion_up45 and plaids with angle 45 '
         new_subset = pd.concat(ls_dfs) # one df with 4 stimuli!
         stimuli_new_s = new_subset['stimulus_name'].unique().tolist() # this will also become the list of titles!
         print(stimuli_new_s)
@@ -232,14 +238,13 @@ class StreakLength:
         lsls = [ls_lefts,ls_rights,ls_straights]
 
         for i in range(3):
-            self.plotter_angles(lsls[i],title = ls_dfs_str + ' ' + ls_ori[i]+ ' STREAKS distribution, angle used '+ str(self.angle_value) +' degrees, ',lb = stimuli_new_s)
-
+            self.plotter_angles(lsls[i],title = ls_ori[i]+ ' Streaks distribution, angle used '+ str(self.angle_value) +' degrees, ',lb = stimuli_new_s)
+# 2 116 357
     def looper_function(
             self):  # the plotter angle now receives from looper function! 4 different lists, for each variable!
         # the subset list_dfsa contains dataframes for each stimulus! thats good. we subset from it again!
         ls_dfs = [self.list_dfs[0], self.list_dfs[7], self.list_dfs[9], self.list_dfs[13]]
         ls_dfs_str = '45 degree up and plaids with 45 degree orientation'
-        new_subset = pd.concat(ls_dfs)  # one df with 4 stimuli!
 
         for subset in range(len(self.list_dfs)):  # here we
             print(self.list_dfs_str[subset])
