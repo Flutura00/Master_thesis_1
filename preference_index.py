@@ -16,6 +16,7 @@ import seaborn as sns
 # todo = probability correct? in y axis.
 # todo = i plot 12 or sth plots per image?
 # todo - PLOT EVERYTHING IN ONE IMAGE!
+# todo : how many degrees does one estimated orientation change differ from the one before it? what about sign change?
 class TimePreferenceIndex:
     def __init__(
             self,

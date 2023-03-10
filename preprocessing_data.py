@@ -8,6 +8,7 @@ import tables
 from tqdm import tqdm
 import math
 # add to sanity check -
+# TODO : Indicate somehow if you flipped, maybe in the title? IF YOU FLIP YOU ALSO SOMETIMES HAVE TO MERGE!
 #TODO fix this - df['distance_change'] = df['distance_change'].astype(np.float64)
 # TODO - ADD A VARIABLE THAT SHOWS THE WAVELENGTH,CONTRAST AND EVERYTHING ELSE.. (THEY ARE TO COME FROM THE STIMULUS NAME... IN THE FUTURE
 # TODO - add a variable that shows a graph or whatever, a big plot of sample size and whatever the sanity check was

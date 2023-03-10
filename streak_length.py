@@ -9,6 +9,7 @@ from tqdm import tqdm
 #%matplotlib inline
 import random
 import math
+# TODO : ONE IMAGE MANY GRAPHS PLSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 # TODO PLOT HISTOGRAMS AS A LINE INSTEAD OF JUST PDF CDF SO PEOPLE UNDERSTAND IT BETTER BUT YOU ALSO GET A GRIP OF WHAT IT LOOKS LIKE..
 #  and see again how you defined the random data, they could also be data retrieved not from the exact same distribution but from a random distribution with the same variable
 # TODO : YOU NEED TO KNOW HOW MANY STYREAKS WERE CALCULATED FOR EACH UNIT OF DATA.
@@ -31,29 +32,29 @@ class StreakLength:
     def __init__(
             self,
             path_to_input1=r"C:\Users\ag-bahl\Desktop\data_processed\eight_dir\data_preprocessed.hdf5",
-            angle_value = 2, #meeeeeeeeeeeeeeh you need complete redefinition of left right straight...
-
+            bout_angle_threshold = 0, #meeeeeeeeeeeeeeh you need complete redefinition of left right straight...
+            angle_values_delta = [2,5],
             plot_a_subset = []
-
             ):
 
         # Set user input
         self.path_to_input1 = Path(path_to_input1)
-        self.angle_value = angle_value
-        self.bout_angle_threshold = angle_value
+        self.bout_angle_threshold = bout_angle_threshold
         self.plot_a_subset = plot_a_subset
+        self.angle_values_delta = angle_values_delta
     def run(self, **kwargs):
         """Main function to perform sanity check."""
         # Update class attributes if given
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.load_df()
-        self.label_bouts() # TODO : CALL IT FROM THE PREFERENCE INDEX OR WATEVER
+        self.label_bouts(bout_angle_threshold_var = self.bout_angle_threshold) # TODO : CALL IT FROM THE PREFERENCE INDEX OR WATEVER
         self.subset_dfs()
     #    self.add_combinations_subsets()
         self.define_srikes()
         self.plotter_angles()
-        self.plotter_left_right_straight_gray()
+        #self.plotter_left_right_straight_gray()
+        self.angle_threshold_comparing()
        # self.plot_pref(separate = True)
 
       #  return self.return_df()
@@ -65,8 +66,8 @@ class StreakLength:
         self.df['distance_change'] = self.df['distance_change'].astype(np.float64)
         self.df['bout_orientation'] = self.df['bout_orientation'].astype(np.float64)
         print(self.df['stimulus_name'].unique().tolist())
-    def label_bouts(self):
-
+    def label_bouts(self,df,bout_angle_threshold_var):
+        # keep it up princess~
         self.df['time'] = self.df['end_time']
         self.df['left_bouts'] = np.nan
         self.df['right_bouts'] = np.nan
@@ -79,20 +80,20 @@ class StreakLength:
         print(len(index_names))
         self.df.reset_index(inplace=True,drop=True)  # Need to go back to a normal column-structure for this
         # bigger than | right
-        self.df.loc[self.df['estimated_orientation_change'] > self.bout_angle_threshold, "bout_orientation"] = 1
-        self.df.loc[self.df['estimated_orientation_change'] > self.bout_angle_threshold, "right_bouts"] = 1
-        self.df.loc[self.df['estimated_orientation_change'] > self.bout_angle_threshold, "left_bouts"] = 0
-        self.df.loc[self.df['estimated_orientation_change'] > self.bout_angle_threshold, "straight_bouts"] = 0
+        self.df.loc[self.df['estimated_orientation_change'] > bout_angle_threshold_var, "bout_orientation"] = 1
+        self.df.loc[self.df['estimated_orientation_change'] > bout_angle_threshold_var, "right_bouts"] = 1
+        self.df.loc[self.df['estimated_orientation_change'] > bout_angle_threshold_var, "left_bouts"] = 0
+        self.df.loc[self.df['estimated_orientation_change'] > bout_angle_threshold_var, "straight_bouts"] = 0
         # smaller | than left
-        self.df.loc[self.df['estimated_orientation_change'] < - self.bout_angle_threshold, "bout_orientation"] = -1
-        self.df.loc[self.df['estimated_orientation_change'] < - self.bout_angle_threshold, "right_bouts"] = 0
-        self.df.loc[self.df['estimated_orientation_change'] < - self.bout_angle_threshold, "left_bouts"] = 1
-        self.df.loc[self.df['estimated_orientation_change'] < - self.bout_angle_threshold, "straight_bouts"] = 0
+        self.df.loc[self.df['estimated_orientation_change'] < - bout_angle_threshold_var, "bout_orientation"] = -1
+        self.df.loc[self.df['estimated_orientation_change'] < - bout_angle_threshold_var, "right_bouts"] = 0
+        self.df.loc[self.df['estimated_orientation_change'] < - bout_angle_threshold_var, "left_bouts"] = 1
+        self.df.loc[self.df['estimated_orientation_change'] < - bout_angle_threshold_var, "straight_bouts"] = 0
         # absolute value | straight
-        self.df.loc[abs(self.df['estimated_orientation_change']) < self.bout_angle_threshold, "bout_orientation"] =0
-        self.df.loc[abs(self.df['estimated_orientation_change']) < self.bout_angle_threshold, "right_bouts"] =0
-        self.df.loc[abs(self.df['estimated_orientation_change']) < self.bout_angle_threshold, "left_bouts"] =0
-        self.df.loc[abs(self.df['estimated_orientation_change']) < self.bout_angle_threshold, "straight_bouts"] =1
+        self.df.loc[abs(self.df['estimated_orientation_change']) < bout_angle_threshold_var, "bout_orientation"] =0
+        self.df.loc[abs(self.df['estimated_orientation_change']) < bout_angle_threshold_var, "right_bouts"] =0
+        self.df.loc[abs(self.df['estimated_orientation_change']) < bout_angle_threshold_var, "left_bouts"] =0
+        self.df.loc[abs(self.df['estimated_orientation_change']) < bout_angle_threshold_var, "straight_bouts"] =1
 
         # absolutes:
         # left
@@ -104,7 +105,7 @@ class StreakLength:
         self.df.loc[self.df['estimated_orientation_change'] > 0, "right_bouts_absolute"] = 1
         self.df.loc[self.df['estimated_orientation_change'] > 0, "bout_orientation_absolute"] = 1
         print('done labeling bouts')
-      #  return self.df
+        return self.df
     def subset_dfs(self):
         self.list_dfs = []
         self.list_dfs_str = self.df['stimulus_name'].unique().tolist()
@@ -141,7 +142,7 @@ class StreakLength:
         #plt.show()
         return list_of_streaks
      #   return list_of_streaks
-    def streak_length_orientation(self,df, angle_value):
+    def streak_length_orientation(self,df):
         nr_mesups = 0
         list_of_directions = df['bout_orientation'].tolist()
 
@@ -211,7 +212,7 @@ class StreakLength:
             plt.show()
 
     def plotter_left_right_straight_gray(self):  # ls_lefts - has 4 elements, gratings plaids1,2,3
-        plt.rcParams["figure.figsize"] = (20, 20)
+        plt.rcParams["figure.figsize"] = (10, 10)
         # find which order gray is in self.stimuli_new_s
         gray = self.stimuli_new_s.index('gray')
         labels = ['gray left', 'gray right', 'gray straight', 'variable left', ' variable right', 'variable straight']
@@ -224,7 +225,7 @@ class StreakLength:
                 cdf_l = np.cumsum(pdf_l)
                 plt.plot(bins_count_l[1:], cdf_l, label=labels[pl], linewidth=1)
                 #    plt.scatter(bins_count_l[1:], cdf_l, label=lb[elm], s=5)
-            plt.title(self.stimuli_new_s[elm], size=10)
+            plt.title(self.stimuli_new_s[elm], size=20)
             plt.legend()
             plt.show()
 
@@ -251,7 +252,7 @@ class StreakLength:
         for subset in range(len(ls_dfs)): # here we loop through the stimuli, and plot separately for each orientation left right straight!
             ss_df = new_subset[new_subset['stimulus_name']==self.stimuli_new_s[subset]]
 
-            list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight = self.streak_length_orientation(ss_df,self.angle_value)
+            list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight = self.streak_length_orientation(ss_df)
 
             self.ls_lefts.append(list_of_streaks_left)
             self.ls_rights.append(list_of_streaks_right)
@@ -279,6 +280,20 @@ class StreakLength:
 # 2 116 357
 
 
+    # TODO : compare one variable but for different angles defining left right straight!   one image many graphs, se po ti q....robt
+    # TODO: for that you need a function to generalize the shape of the page and the graphs in it (axes? so its not messy? )
+    def  angle_threshold_comparing(self):
+
+        for value in range(len(self.angle_values_delta)):
+
+            # first you neeed to define the bouts all over again with the specified angle:
+            self.label_bouts(bout_angle_threshold_var = self.angle_values_delta[value])
+            # TODO: then plot the first plot [ax?]: you would either have three plots of make a function that asks if you want left right straight or if you want stimuli specitic three side? nice!
+            # for now lets plot the classic left right straight:
+            self.define_srikes()
+            self.plotter_angles()
+        #
+
 
     def looper_function(self):  # the plotter angle now receives from looper function! 4 different lists, for each variable!
         # the subset list_dfsa contains dataframes for each stimulus! thats good. we subset from it again!
@@ -294,10 +309,10 @@ class StreakLength:
 
             list_of_streaks_subset = self.streak_length(self.list_dfs[subset])
             list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight = self.streak_length_orientation(
-                self.list_dfs[subset], self.angle_value)
+                self.list_dfs[subset], self.bout_angle_threshold)
             ls_str = [list_of_streaks_left, list_of_streaks_right, list_of_streaks_straight, list_of_streaks_rand,
                       list_of_streaks_subset]
-            self.plotter_angles(ls_str,title=str(self.list_dfs_str[subset]) + ' angle value ' + str(self.angle_value))
+            self.plotter_angles(ls_str,title=str(self.list_dfs_str[subset]) + ' angle value ' + str(self.bout_angle_threshold))
 
 
 # def strak length to left to the right and straight(+-2 degrees)! and also absolute valyue
