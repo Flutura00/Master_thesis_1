@@ -15,10 +15,11 @@ from tqdm import tqdm
 import math
 import random
 # he radi of each ring from 0 to 9: [0, 0.31622776601683794, 0.447213595499958, 0.5477225575051661, 0.6324555320336759, 0.7071067811865476, 0.7745966692414833, 0.8366600265340756, 0.894427190999916, 0.9486832980505138, 1.0]
+# TODO: this low and high., take a look lol...
 class cdf_pdf_calculation:
     def __init__(
             self,
-            path_to_input =r"C:\Users\ag-bahl\Desktop\dot_motion_ring_correct_closed_loop\data_preprocessed.hdf5",
+            path_to_input =r"C:\Users\ag-bahl\Desktop\data_processed\sine_forward_sine_45_plaid_45_wavelength_0_15_not_symmetric\data_preprocessed.hdf5",
             compare_which = [],
             variable = 'ring_membership',
             ):
@@ -110,7 +111,7 @@ class cdf_pdf_calculation:
             h = max(list_values) # maximum of  ring membership - 1
             if self.variable == 'radius':
                 h = 1
-            sampl = np.random.uniform(low=0, high=h, size=(len(df_temp),))
+            sampl = np.random.uniform(low=0, high=h+1, size=(len(df_temp),))
             self.pdf_cdf(sampl, zero_one[pl], 'Random')
             #shuffle = self.df[self.variable].tolist()
             #random.shuffle(shuffle)

@@ -15,16 +15,15 @@ import seaborn as sns
 # todo = preference in terms of response frequency toward that angle, and preference in terms average angle of orientation...
 # todo = probability correct? in y axis.
 # todo = i plot 12 or sth plots per image?
-# todo - PLOT EVERYTHING IN ONE IMAGE!
 class TimePreferenceIndex:
     def __init__(
             self,
-            path_to_input1=r"C:\Users\ag-bahl\Desktop\data_processed\plaid_spectrum_angles\data_preprocessed.hdf5",
+            path_to_input1=r"C:\Users\ag-bahl\Desktop\data_processed\sine_forward_sine_45_plaid_45_wavelength_0_15_not_symmetric\data_preprocessed.hdf5",
             bin_size = 1,
             subset = False,
             pref = 'preference_absolute',
             plot_together = True,
-            plot_sem = True,
+            plot_sem = False,
             ):
 
         # Set user input
@@ -44,7 +43,7 @@ class TimePreferenceIndex:
         self.bin_data()
         self.mean_sem_df()
         self.plot_pref(separate = False)
-     #   self.each_fish(separate = False)
+      #  self.each_fish(separate = True)
      #   self.plot_pref(separate = True)
 
       #  return self.return_df()
@@ -65,7 +64,7 @@ class TimePreferenceIndex:
         self.bin_df['total_bouts'] = self.bin_df.left_bouts + self.bin_df.right_bouts + self.bin_df.straight_bouts
         #Analysed part:
         self.bin_df['preference_index'] = (-self.bin_df.left_bouts + self.bin_df.right_bouts + self.bin_df.straight_bouts) / self.bin_df.total_bouts#(self.bin_df.bout_orientation/self.bin_df.total_bouts)*100# (-self.bin_df.left_bouts + self.bin_df.right_bouts + self.bin_df.straight_bouts)/self.bin_df.total_bouts
-        self.bin_df['preference_absolute'] =  (self.bin_df.bout_orientation_absolute/self.bin_df.total_bouts)*100 #(-self.bin_df.left_bouts_absolute + self.bin_df.right_bouts_absolute) / self.bin_df.total_bouts
+        self.bin_df['preference_absolute'] =(-self.bin_df.left_bouts_absolute + self.bin_df.right_bouts_absolute) / self.bin_df.total_bouts#  (self.bin_df.bout_orientation_absolute/self.bin_df.total_bouts)*100
         self.bin_df['percentage_left'] = (self.bin_df.left_bouts / self.bin_df.total_bouts)*100
         self.bin_df['percentage_right'] = (self.bin_df.right_bouts / self.bin_df.total_bouts)*100
         self.bin_df['percentage_straight'] = (self.bin_df.straight_bouts / self.bin_df.total_bouts)*100
@@ -150,7 +149,7 @@ class TimePreferenceIndex:
             bin_df['percentage_left'] = (bin_df.left_bouts / bin_df.total_bouts) * 100
             bin_df['percentage_right'] = (bin_df.right_bouts / bin_df.total_bouts) * 100
             bin_df['percentage_straight'] = (bin_df.straight_bouts / bin_df.total_bouts) * 100
-            bin_df['orientation'] = bin_df.estimated_orientation_change / bin_df.total_bouts
+            bin_df['orientation'] = bin_df.bout_orientation / bin_df.total_bouts
             print('done data binning')
 
             self.time_marker = None
@@ -207,5 +206,7 @@ class TimePreferenceIndex:
                 plt.ylabel(str(self.pref), size=20)
                 plt.show()
 
-x = TimePreferenceIndex()
+x = TimePreferenceIndex(plot_sem = True)
+x.run()
+x = TimePreferenceIndex(plot_sem = False)
 x.run()

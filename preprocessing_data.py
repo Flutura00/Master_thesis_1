@@ -9,7 +9,11 @@ from tqdm import tqdm
 import math
 # add to sanity check -
 #TODO fix this - df['distance_change'] = df['distance_change'].astype(np.float64)
-
+# TODO - ADD A VARIABLE THAT SHOWS THE WAVELENGTH,CONTRAST AND EVERYTHING ELSE.. (THEY ARE TO COME FROM THE STIMULUS NAME... IN THE FUTURE
+# TODO - add a variable that shows a graph or whatever, a big plot of sample size and whatever the sanity check was
+# TODO - as a sanity check, I see how long the experiment lasted for each fish. and a graph of fish activity through time to see if it dies. and then plot it all together!
+# TODO - MULTIINDEXING EVERYTHING???????????
+# supposed to show...
 # flip dicts stay here:
 """for sine gratings: 
             flip_dict={'motion_rightdown45': 'motion_leftdown45',
@@ -41,22 +45,19 @@ import math
 class PreprocessingData:
     def __init__(
             self,
-            path_to_input = r"C:\Users\ag-bahl\Desktop\data\sine_75_wv_0_15\data_combined_checked.hdf5",
-            path_to_output =r"C:\Users\ag-bahl\Desktop\data\sine_75_wv_0_15\data_preprocessed.hdf5",
-
-
-
+            path_to_folder = r"C:\Users\ag-bahl\Desktop\data_processed\eight_directions",
             bout_angle_threshold = 2,
             ori_change_col = 'estimated_orientation_change',
-            flip_dict={"0_plaid_-75":"0_plaid_75" }#,"0_plaid_-75":"0_plaid_75"}
+            flip_dict={"bla":"bla" }
             ):
         # Set user input
-        self.path_to_input = Path(path_to_input)
-        self.path_to_output = Path(path_to_output)
+        self.path_to_folder = Path(path_to_folder)
         self.bout_angle_threshold = bout_angle_threshold
         self.nr_rings = 10
         self.ori_change_col = ori_change_col
         self.flip_dict = flip_dict
+        self.path_to_input_file = self.path_to_folder.joinpath('data_combined_checked.hdf5')
+        self.path_to_output_file = self.path_to_folder.joinpath('data_preprocessed.hdf5')
     def run(self, **kwargs):
         """Main function to perform sanity check."""
         # Update class attributes if given
@@ -73,7 +74,7 @@ class PreprocessingData:
 
     def load_df(self):
         """Load bout-level dataframe from folder."""
-        self.df = pd.read_hdf(self.path_to_input)
+        self.df = pd.read_hdf(self.path_to_input_file)
         self.df.sort_values(['folder_name', 'start_time_absolute'], ascending=True,inplace = True)
         self.df.reset_index(inplace = True)
 
@@ -82,13 +83,14 @@ class PreprocessingData:
         self.df.sort_values(['folder_name', 'start_time_absolute'], ascending=True,inplace = True)
         self.df.reset_index(inplace=True,drop=True)
 #        self.df.drop(['index'],inplace = True,axis = 1)
-        print(f"Storing preprocessed file to {self.path_to_output}...")
+        print(f"Storing preprocessed file to {self.path_to_output_file}...")
         # Store dataframe as hdf5 file
-        self.df.to_hdf(str(self.path_to_output), key="all_events", complevel=9)
+        self.df.to_hdf(str(self.path_to_output_file), key="all_events", complevel=9)
         print('storage done')
 
 
     def fish_ids(self):
+        # TODO - WHAT THE HEP IS THIS BELOW?
         self.df['fish_ID'] = self.df.loc[:, 'folder_name'] # fish_name folder_name
         old_stimulus_name = ['dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0_outerr1',
                 'dir0_coh100_den1200_speed0.3_liftime0.011111111111111112_brightness0.5_size0.01_innerr0.1_outerr1',
@@ -193,7 +195,12 @@ class PreprocessingData:
 # to be added - stimnulus gray light versus stimulus actual.
 # to be added - the preprocessing plots!!!
 
+
+
+
+
 x = PreprocessingData()
 x.run()
+
 
 
